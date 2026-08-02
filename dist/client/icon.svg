@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Rupee growing into a cardamom plant">
+  <rect width="512" height="512" fill="#064d2d"/>
+  <text x="84" y="324" fill="#efb23f" font-family="Arial, Helvetica, sans-serif" font-size="292" font-weight="800">₹</text>
+  <path d="M264 423C272 315 318 211 410 102" fill="none" stroke="#fff0cf" stroke-width="18" stroke-linecap="round"/>
+  <path d="M278 340C279 231 328 137 416 90c7 100-24 195-138 250Z" fill="#507832" stroke="#fff0cf" stroke-width="18" stroke-linejoin="round"/>
+  <path d="M267 422c-61-4-109-38-126-101 65 4 113 35 126 101Z" fill="#efb23f"/>
+  <path d="M272 422c61-4 109-38 126-101-65 4-113 35-126 101Z" fill="#efb23f"/>
+  <path d="M244 397c-36-11-61-30-76-58 35 8 61 27 76 58Zm50 0c36-11 61-30 76-58-35 8-61 27-76 58Z" fill="#fff0cf"/>
+</svg>
