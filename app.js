@@ -114,6 +114,15 @@ function setMessage(id, text = "", tone = "success") {
   element.classList.toggle("error", tone === "error");
 }
 
+function updateConnectionStatus() {
+  const status = $("connectionStatus");
+  if (!status) return;
+  const online = navigator.onLine;
+  status.dataset.online = String(online);
+  status.title = online ? "App ready and connected" : "Offline — your data is still saved locally";
+  status.querySelector(".status-label").textContent = online ? "Ready" : "Offline";
+}
+
 function dismissToast(toast) {
   if (!toast || toast.classList.contains("leaving")) return;
   toast.classList.add("leaving");
@@ -469,7 +478,7 @@ setupEnhancedUi();
 document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => {
     switchView(tab.dataset.view);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0 });
   });
   tab.addEventListener("keydown", event => {
     if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
@@ -479,7 +488,7 @@ document.querySelectorAll(".tab").forEach(tab => {
     const nextTab = tabs[(currentIndex + offset + tabs.length) % tabs.length];
     nextTab.focus();
     switchView(nextTab.dataset.view);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0 });
   });
 });
 
@@ -580,7 +589,7 @@ document.addEventListener("click", async event => {
   if (switchTarget) {
     if (switchTarget.dataset.summaryMode) setSummaryMode(switchTarget.dataset.summaryMode);
     switchView(switchTarget.dataset.switchView);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0 });
     return;
   }
 
@@ -787,11 +796,20 @@ $("installBtn").addEventListener("click", async () => {
   if (choice.outcome === "accepted") showToast("App installed", "You can now open it from your home screen.");
 });
 
-window.addEventListener("offline", () => showToast("You are offline", "Saved data remains available on this device.", "info"));
-window.addEventListener("online", () => showToast("Back online", "The app is connected again."));
+window.addEventListener("scroll", () => {
+  document.querySelector(".app-header")?.classList.toggle("scrolled", window.scrollY > 8);
+}, { passive: true });
+window.addEventListener("offline", () => {
+  updateConnectionStatus();
+  showToast("You are offline", "Saved data remains available on this device.", "info");
+});
+window.addEventListener("online", () => {
+  updateConnectionStatus();
+  showToast("Back online", "The app is connected again.");
+});
 
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js?v=15", { updateViaCache: "none" })
+if ("serviceWorker" in navigator && !new URLSearchParams(location.search).has("preview")) {
+  navigator.serviceWorker.register("service-worker.js?v=16", { updateViaCache: "none" })
     .then(registration => registration.update())
     .catch(() => {
       showToast("Offline mode unavailable", "The app will still work while this page stays open.", "error");
@@ -801,6 +819,7 @@ if ("serviceWorker" in navigator) {
 $("date").value = localDateString();
 $("summaryDate").value = localDateString();
 $("todayLabel").textContent = dateFormatter.format(new Date());
+updateConnectionStatus();
 persist();
 refresh();
 switchView(location.hash.slice(1) || "entry", false);
