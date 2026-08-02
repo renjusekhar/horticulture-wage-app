@@ -1,4 +1,4 @@
-const CACHE = "horticulture-wage-v9";
+const CACHE = "horticulture-wage-v10";
 const CACHE_PREFIX = "horticulture-wage-";
 const FILES = [
   "./",

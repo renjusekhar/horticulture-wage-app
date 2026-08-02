@@ -202,6 +202,91 @@ function syncWage() {
   if (worker) $("wage").value = worker.wage;
 }
 
+function setupEnhancedUi() {
+  document.querySelectorAll("label").forEach(label => {
+    const select = label.querySelector("select");
+    if (!select) return;
+    label.classList.add("select-label");
+    label.addEventListener("click", event => {
+      if (event.target === select || select.contains(event.target)) return;
+      event.preventDefault();
+      try {
+        if (typeof select.showPicker === "function") select.showPicker();
+        else {
+          select.focus();
+          select.click();
+        }
+      } catch {
+        select.focus();
+      }
+    });
+  });
+
+  $("saveEntry").insertAdjacentHTML("beforebegin", `
+    <div id="entryPreview" class="entry-preview full" aria-live="polite">
+      <span class="preview-icon" aria-hidden="true">✓</span>
+      <div class="preview-copy">
+        <span>Ready to save</span>
+        <strong id="previewWorker">Choose a worker</strong>
+        <small id="previewDetails"></small>
+      </div>
+      <strong id="previewWage">${money(0)}</strong>
+    </div>
+  `);
+
+  $("entry").insertAdjacentHTML("beforeend", `
+    <section class="card recent-card" aria-labelledby="recentTitle">
+      <div class="recent-heading">
+        <div><p class="section-kicker">Latest</p><h2 id="recentTitle">Recent Activity</h2></div>
+        <button class="text-button" type="button" data-switch-view="records">View all <span aria-hidden="true">→</span></button>
+      </div>
+      <div id="recentEntries" class="recent-list"></div>
+    </section>
+  `);
+}
+
+function renderEntryPreview() {
+  const preview = $("entryPreview");
+  if (!preview) return;
+  const worker = $("worker").value || "Choose a worker";
+  const workType = $("workType").value || "Choose work";
+  const supervisor = $("supervisor").value;
+  const payment = $("paymentStatus").value;
+
+  $("previewWorker").textContent = worker;
+  $("previewDetails").textContent = `${workType} · ${supervisor} · ${payment}`;
+  $("previewWage").textContent = money($("wage").value);
+  preview.dataset.status = payment.toLowerCase();
+  preview.animate?.(
+    [{ opacity: .7, transform: "translateY(2px)" }, { opacity: 1, transform: "none" }],
+    { duration: 180, easing: "ease-out" }
+  );
+}
+
+function renderRecentEntries() {
+  const container = $("recentEntries");
+  if (!container) return;
+  const recent = [...state.entries]
+    .sort((a, b) => b.date.localeCompare(a.date) || Number(b.createdAt || 0) - Number(a.createdAt || 0))
+    .slice(0, 3);
+
+  container.innerHTML = recent.map(entry => `
+    <article class="recent-item">
+      <span class="recent-avatar" aria-hidden="true">${escapeHtml(entry.worker.trim().charAt(0).toUpperCase() || "W")}</span>
+      <div class="recent-copy">
+        <strong>${escapeHtml(entry.worker)}</strong>
+        <small>${escapeHtml(entry.workType)} · ${formatDate(entry.date)}</small>
+      </div>
+      <div class="recent-amount">
+        <strong>${money(entry.wage)}</strong>
+        <span class="badge ${entry.status === "Paid" ? "paid" : "pending"}">${escapeHtml(entry.status)}</span>
+      </div>
+    </article>
+  `).join("") || `
+    <div class="recent-empty"><span aria-hidden="true">↗</span><strong>No activity yet</strong><p>Saved work entries will appear here.</p></div>
+  `;
+}
+
 function renderWorkers() {
   $("workerCount").textContent = `${state.workers.length} ${state.workers.length === 1 ? "worker" : "workers"}`;
   $("workersBody").innerHTML = state.workers.map(worker => `
@@ -219,7 +304,7 @@ function renderWorkers() {
 function renderRecords(filter = "") {
   const query = filter.trim().toLowerCase();
   const rows = [...state.entries]
-    .sort((a, b) => b.date.localeCompare(a.date))
+    .sort((a, b) => b.date.localeCompare(a.date) || Number(b.createdAt || 0) - Number(a.createdAt || 0))
     .filter(entry => (
       `${entry.worker} ${entry.workType} ${entry.supervisor} ${entry.status} ${entry.remarks || ""}`
         .toLowerCase()
@@ -350,6 +435,8 @@ function refresh() {
   renderWorkers();
   renderRecords($("recordSearch").value);
   renderSummary();
+  renderEntryPreview();
+  renderRecentEntries();
 }
 
 function shiftSummaryPeriod(direction) {
@@ -358,6 +445,8 @@ function shiftSummaryPeriod(direction) {
   $("summaryDate").value = localDateString(date);
   renderSummary();
 }
+
+setupEnhancedUi();
 
 document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => {
@@ -376,7 +465,15 @@ document.querySelectorAll(".tab").forEach(tab => {
   });
 });
 
-$("worker").addEventListener("change", syncWage);
+$("worker").addEventListener("change", () => {
+  syncWage();
+  renderEntryPreview();
+});
+$("workType").addEventListener("change", renderEntryPreview);
+$("wage").addEventListener("input", renderEntryPreview);
+$("supervisor").addEventListener("change", renderEntryPreview);
+$("paymentStatus").addEventListener("change", renderEntryPreview);
+$("date").addEventListener("change", renderEntryPreview);
 $("summaryDate").addEventListener("change", renderSummary);
 document.querySelectorAll("[data-summary-mode-button]").forEach(button => {
   button.addEventListener("click", () => setSummaryMode(button.dataset.summaryModeButton));
@@ -410,6 +507,7 @@ $("entryForm").addEventListener("submit", event => {
 
   const entry = {
     id: crypto.randomUUID(),
+    createdAt: Date.now(),
     date: $("date").value,
     worker: $("worker").value,
     workType: $("workType").value,
@@ -667,7 +765,7 @@ window.addEventListener("offline", () => showToast("You are offline", "Saved dat
 window.addEventListener("online", () => showToast("Back online", "The app is connected again."));
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js?v=9", { updateViaCache: "none" })
+  navigator.serviceWorker.register("service-worker.js?v=10", { updateViaCache: "none" })
     .then(registration => registration.update())
     .catch(() => {
       showToast("Offline mode unavailable", "The app will still work while this page stays open.", "error");
