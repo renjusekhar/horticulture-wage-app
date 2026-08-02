@@ -48,6 +48,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-IN", {
 });
 
 const money = value => moneyFormatter.format(Number(value || 0));
+let summaryMode = "daily";
 
 function persist() {
   localStorage.setItem("hw_workers", JSON.stringify(state.workers));
@@ -281,9 +282,29 @@ function renderRecords(filter = "") {
 
 function renderSummary() {
   const selected = $("summaryDate").value || localDateString();
+  const isDaily = summaryMode === "daily";
   const [start, end] = weekBounds(selected);
-  const entries = state.entries.filter(entry => entry.date >= start && entry.date <= end);
-  $("weekLabel").textContent = `${formatDate(start)} — ${formatDate(end)}`;
+  const entries = isDaily
+    ? state.entries.filter(entry => entry.date === selected)
+    : state.entries.filter(entry => entry.date >= start && entry.date <= end);
+
+  $("summaryTitle").textContent = isDaily ? "Daily Summary" : "Weekly Summary";
+  $("summaryDescription").textContent = isDaily
+    ? "Review wages for one selected day."
+    : "Browse totals one week at a time.";
+  $("periodLabel").textContent = isDaily
+    ? formatDate(selected)
+    : `${formatDate(start)} — ${formatDate(end)}`;
+  $("summaryDetailHeading").textContent = isDaily ? "Work" : "Days";
+  $("previousPeriod").setAttribute("aria-label", isDaily ? "Previous day" : "Previous week");
+  $("nextPeriod").setAttribute("aria-label", isDaily ? "Next day" : "Next week");
+  $("currentPeriod").textContent = isDaily ? "Today" : "This week";
+
+  document.querySelectorAll("[data-summary-mode-button]").forEach(button => {
+    const active = button.dataset.summaryModeButton === summaryMode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
 
   const total = entries.reduce((sum, entry) => sum + Number(entry.wage), 0);
   const paid = entries
@@ -303,22 +324,35 @@ function renderSummary() {
 
   const grouped = {};
   entries.forEach(entry => {
-    grouped[entry.worker] ??= { days: new Set(), total: 0, pending: 0 };
+    grouped[entry.worker] ??= { days: new Set(), workTypes: new Set(), total: 0, pending: 0 };
     grouped[entry.worker].days.add(entry.date);
+    grouped[entry.worker].workTypes.add(entry.workType);
     grouped[entry.worker].total += Number(entry.wage);
     if (entry.status !== "Paid") grouped[entry.worker].pending += Number(entry.wage);
   });
 
-  $("workerSummaryBody").innerHTML = Object.entries(grouped).map(([name, group]) => `
-    <tr>
-      <td data-label="Worker"><strong>${escapeHtml(name)}</strong></td>
-      <td data-label="Days">${group.days.size}</td>
-      <td data-label="Total">${money(group.total)}</td>
-      <td data-label="Pending">${money(group.pending)}</td>
-    </tr>
-  `).join("") || '<tr><td colspan="4" class="empty-cell"><strong>No entries this week</strong>Choose another week or add a daily entry.</td></tr>';
+  const detailLabel = isDaily ? "Work" : "Days";
+  $("workerSummaryBody").innerHTML = Object.entries(grouped).map(([name, group]) => {
+    const detail = isDaily ? [...group.workTypes].join(", ") : group.days.size;
+    return `
+      <tr>
+        <td data-label="Worker"><strong>${escapeHtml(name)}</strong></td>
+        <td data-label="${detailLabel}">${isDaily ? escapeHtml(detail) : detail}</td>
+        <td data-label="Total">${money(group.total)}</td>
+        <td data-label="Pending">${money(group.pending)}</td>
+      </tr>
+    `;
+  }).join("") || `
+    <tr><td colspan="4" class="empty-cell"><strong>No entries ${isDaily ? "for this day" : "this week"}</strong>${isDaily ? "Choose another date" : "Choose another week"} or add a daily entry.</td></tr>
+  `;
 
   renderMiniStats();
+}
+
+function setSummaryMode(mode) {
+  if (!["daily", "weekly"].includes(mode)) return;
+  summaryMode = mode;
+  renderSummary();
 }
 
 function renderMiniStats() {
@@ -345,9 +379,9 @@ function refresh() {
   updateEntryAvailability();
 }
 
-function shiftSummaryWeek(days) {
+function shiftSummaryPeriod(direction) {
   const date = dateFromString($("summaryDate").value || localDateString());
-  date.setDate(date.getDate() + days);
+  date.setDate(date.getDate() + direction * (summaryMode === "daily" ? 1 : 7));
   $("summaryDate").value = localDateString(date);
   renderSummary();
 }
@@ -375,9 +409,12 @@ $("worker").addEventListener("change", () => {
 });
 $("date").addEventListener("change", () => updateEntryAvailability());
 $("summaryDate").addEventListener("change", renderSummary);
-$("prevWeek").addEventListener("click", () => shiftSummaryWeek(-7));
-$("nextWeek").addEventListener("click", () => shiftSummaryWeek(7));
-$("todayWeek").addEventListener("click", () => {
+document.querySelectorAll("[data-summary-mode-button]").forEach(button => {
+  button.addEventListener("click", () => setSummaryMode(button.dataset.summaryModeButton));
+});
+$("previousPeriod").addEventListener("click", () => shiftSummaryPeriod(-1));
+$("nextPeriod").addEventListener("click", () => shiftSummaryPeriod(1));
+$("currentPeriod").addEventListener("click", () => {
   $("summaryDate").value = localDateString();
   renderSummary();
 });
@@ -459,6 +496,7 @@ $("workerForm").addEventListener("submit", event => {
 document.addEventListener("click", async event => {
   const switchTarget = event.target.closest("[data-switch-view]");
   if (switchTarget) {
+    if (switchTarget.dataset.summaryMode) setSummaryMode(switchTarget.dataset.summaryMode);
     switchView(switchTarget.dataset.switchView);
     window.scrollTo({ top: 0, behavior: "smooth" });
     return;
@@ -687,7 +725,7 @@ window.addEventListener("offline", () => showToast("You are offline", "Saved dat
 window.addEventListener("online", () => showToast("Back online", "The app is connected again."));
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js?v=7", { updateViaCache: "none" })
+  navigator.serviceWorker.register("service-worker.js?v=8", { updateViaCache: "none" })
     .then(registration => registration.update())
     .catch(() => {
       showToast("Offline mode unavailable", "The app will still work while this page stays open.", "error");

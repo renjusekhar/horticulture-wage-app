@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=7" />
+  <link rel="stylesheet" href="styles.css?v=8" />
 </head>
 <body>
   <header class="app-header">
@@ -28,7 +28,7 @@
 
   <nav class="tabs" aria-label="Main navigation" role="tablist">
     <button class="tab active" data-view="entry" role="tab" aria-selected="true" aria-controls="entry"><span aria-hidden="true">＋</span> Daily Entry</button>
-    <button class="tab" data-view="summary" role="tab" aria-selected="false" aria-controls="summary" aria-label="Weekly Summary"><span aria-hidden="true">◫</span><span class="tab-label"><span class="wide-label">Weekly </span>Summary</span></button>
+    <button class="tab" data-view="summary" role="tab" aria-selected="false" aria-controls="summary" aria-label="Wage Summary"><span aria-hidden="true">◫</span><span class="tab-label"><span class="wide-label">Wage </span>Summary</span></button>
     <button class="tab" data-view="workers" role="tab" aria-selected="false" aria-controls="workers"><span aria-hidden="true">👤</span> Workers</button>
     <button class="tab" data-view="records" role="tab" aria-selected="false" aria-controls="records"><span aria-hidden="true">≡</span> Records <span id="recordTabCount" class="tab-count">0</span></button>
   </nav>
@@ -59,25 +59,31 @@
       </div>
 
       <div class="quick-stats">
-        <button type="button" class="stat-card" data-switch-view="summary"><span>Today</span><strong id="todayTotal">₹0</strong><small>View breakdown <span aria-hidden="true">→</span></small></button>
-        <button type="button" class="stat-card" data-switch-view="summary"><span>This week</span><strong id="weekTotalMini">₹0</strong><small>View breakdown <span aria-hidden="true">→</span></small></button>
-        <button type="button" class="stat-card stat-pending" data-switch-view="summary"><span>Pending this week</span><strong id="pendingMini">₹0</strong><small>Review wages <span aria-hidden="true">→</span></small></button>
+        <button type="button" class="stat-card" data-switch-view="summary" data-summary-mode="daily"><span>Today</span><strong id="todayTotal">₹0</strong><small>View daily summary <span aria-hidden="true">→</span></small></button>
+        <button type="button" class="stat-card" data-switch-view="summary" data-summary-mode="weekly"><span>This week</span><strong id="weekTotalMini">₹0</strong><small>View weekly summary <span aria-hidden="true">→</span></small></button>
+        <button type="button" class="stat-card stat-pending" data-switch-view="summary" data-summary-mode="weekly"><span>Pending this week</span><strong id="pendingMini">₹0</strong><small>Review weekly wages <span aria-hidden="true">→</span></small></button>
       </div>
     </section>
 
     <section id="summary" class="view" role="tabpanel" hidden>
       <div class="card">
         <div class="section-head">
-          <div><p class="section-kicker">Overview</p><h2>Weekly Summary</h2><p>Browse totals one week at a time.</p></div>
-          <div class="week-controls" aria-label="Choose summary week">
-            <button id="prevWeek" class="icon-button secondary" type="button" aria-label="Previous week">←</button>
-            <label class="sr-only" for="summaryDate">Date in summary week</label>
-            <input id="summaryDate" type="date" />
-            <button id="nextWeek" class="icon-button secondary" type="button" aria-label="Next week">→</button>
-            <button id="todayWeek" class="secondary" type="button">This week</button>
+          <div><p class="section-kicker">Overview</p><h2 id="summaryTitle">Daily Summary</h2><p id="summaryDescription">Review wages for one selected day.</p></div>
+          <div class="summary-mode-toggle" role="tablist" aria-label="Summary period">
+            <button class="summary-mode active" type="button" role="tab" aria-selected="true" data-summary-mode-button="daily">Daily</button>
+            <button class="summary-mode" type="button" role="tab" aria-selected="false" data-summary-mode-button="weekly">Weekly</button>
           </div>
         </div>
-        <div id="weekLabel" class="week-label"></div>
+        <div class="summary-toolbar">
+          <div id="periodLabel" class="period-label"></div>
+          <div class="period-controls" aria-label="Choose summary period">
+            <button id="previousPeriod" class="icon-button secondary" type="button" aria-label="Previous day">←</button>
+            <label class="sr-only" for="summaryDate">Summary date</label>
+            <input id="summaryDate" type="date" />
+            <button id="nextPeriod" class="icon-button secondary" type="button" aria-label="Next day">→</button>
+            <button id="currentPeriod" class="secondary" type="button">Today</button>
+          </div>
+        </div>
         <div class="summary-grid">
           <article><span>Total wages</span><strong id="sumTotal">₹0</strong></article>
           <article><span>Paid</span><strong id="sumPaid">₹0</strong></article>
@@ -87,7 +93,7 @@
           <article><span>Work entries</span><strong id="sumEntries">0</strong></article>
         </div>
         <h3>Worker-wise totals</h3>
-        <div class="table-wrap"><table><thead><tr><th>Worker</th><th>Days</th><th>Total</th><th>Pending</th></tr></thead><tbody id="workerSummaryBody"></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>Worker</th><th id="summaryDetailHeading">Work</th><th>Total</th><th>Pending</th></tr></thead><tbody id="workerSummaryBody"></tbody></table></div>
       </div>
     </section>
 
@@ -156,6 +162,6 @@
 
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

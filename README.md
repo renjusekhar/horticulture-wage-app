@@ -5,7 +5,7 @@ A lightweight installable web app for Mac and iPhone.
 ## Features
 - Add workers and default wages
 - Record daily horticulture work
-- Automatic weekly totals
+- Daily and weekly wage summaries
 - Supervisor totals for Ajith and Dad
 - Paid and pending tracking
 - Edit and delete entries

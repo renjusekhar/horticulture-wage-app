@@ -212,10 +212,14 @@ button:disabled { opacity: .48; cursor: not-allowed; }
 .stat-card strong, .summary-grid strong { display: block; margin-top: 7px; font-size: 1.45rem; }
 .stat-card small { display: block; margin-top: 12px; color: var(--green); font-weight: 750; }
 
-.week-controls { display: flex; align-items: center; gap: 7px; }
-.week-controls input { width: 158px; }
+.summary-mode-toggle { display: inline-flex; align-items: center; gap: 4px; padding: 4px; border-radius: 12px; background: var(--green-soft); }
+.summary-mode { min-height: 38px; padding: 8px 15px; color: var(--green-dark); background: transparent; box-shadow: none; }
+.summary-mode.active { color: #fff; background: var(--green); box-shadow: 0 5px 14px rgba(31, 111, 67, .17); }
+.summary-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 16px; }
+.period-controls { display: flex; align-items: center; gap: 7px; }
+.period-controls input { width: 158px; }
 .icon-button { width: 43px; padding-inline: 0; font-size: 1.1rem; }
-.week-label { margin: 2px 0 16px; font-weight: 750; color: var(--green); }
+.period-label { font-weight: 800; color: var(--green); }
 
 .table-toolbar { min-height: 28px; display: flex; justify-content: space-between; align-items: center; margin: -4px 2px 8px; color: var(--muted); font-size: .84rem; font-weight: 700; }
 .text-button { padding: 5px; background: transparent; color: var(--green); }
@@ -361,14 +365,17 @@ dialog::backdrop { background: rgba(8, 27, 16, .5); backdrop-filter: blur(3px); 
   .section-head, .section-title { align-items: flex-start; flex-direction: column; gap: 12px; }
   .section-head .search-wrap { width: 100%; }
   .date-chip, .count-chip { align-self: flex-start; }
-  .week-controls {
+  .summary-mode-toggle { width: 100%; }
+  .summary-mode { flex: 1; }
+  .summary-toolbar { width: 100%; align-items: stretch; flex-direction: column; gap: 10px; }
+  .period-controls {
     width: 100%;
     display: grid;
     grid-template-columns: 46px minmax(0, 1fr) 46px;
     gap: 7px;
   }
-  .week-controls input { width: 100%; min-width: 0; }
-  #todayWeek { grid-column: 1 / -1; }
+  .period-controls input { width: 100%; min-width: 0; }
+  #currentPeriod { grid-column: 1 / -1; }
   .stat-card strong, .summary-grid strong { font-size: 1.2rem; }
   .table-wrap { overflow: visible; border: 0; border-radius: 0; }
   table { min-width: 0; }
