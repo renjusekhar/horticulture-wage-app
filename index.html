@@ -9,14 +9,14 @@
   <meta name="apple-mobile-web-app-title" content="Wage Tracker" />
   <title>Wage Tracker</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=12" />
+  <link rel="icon" href="icon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
+  <link rel="stylesheet" href="styles.css?v=14" />
 </head>
 <body>
   <header class="app-header">
     <div class="brand">
-      <span class="brand-mark" aria-hidden="true">H</span>
+      <img class="brand-mark" src="icon-192.png" width="45" height="45" alt="" aria-hidden="true" />
       <div>
       <p class="eyebrow">Cardamom Land</p>
       <h1>Horticulture Wage Tracker</h1>
@@ -27,10 +27,10 @@
   </header>
 
   <nav class="tabs" aria-label="Main navigation" role="tablist">
-    <button class="tab active" data-view="entry" role="tab" aria-selected="true" aria-controls="entry"><span aria-hidden="true">＋</span> Daily Entry</button>
-    <button class="tab" data-view="summary" role="tab" aria-selected="false" aria-controls="summary" aria-label="Wage Summary"><span aria-hidden="true">◫</span><span class="tab-label"><span class="wide-label">Wage </span>Summary</span></button>
-    <button class="tab" data-view="workers" role="tab" aria-selected="false" aria-controls="workers"><span aria-hidden="true">👤</span> Workers</button>
-    <button class="tab" data-view="records" role="tab" aria-selected="false" aria-controls="records"><span aria-hidden="true">≡</span> Records <span id="recordTabCount" class="tab-count">0</span></button>
+    <button class="tab active" data-view="entry" role="tab" aria-selected="true" aria-controls="entry"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3v3m10-3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v12H4V7a2 2 0 0 1 2-2Zm6 7v5m-2.5-2.5h5"/></svg></span> Daily Entry</button>
+    <button class="tab" data-view="summary" role="tab" aria-selected="false" aria-controls="summary" aria-label="Wage Summary"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19V9h4v10m2 0V5h4v14m2 0v-7h4v7M3 19h19"/></svg></span><span class="tab-label"><span class="wide-label">Wage </span>Summary</span></button>
+    <button class="tab" data-view="workers" role="tab" aria-selected="false" aria-controls="workers"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.5-1a3 3 0 1 0 0-6m-13 16v-2a5.5 5.5 0 0 1 11 0v2m1-6a5 5 0 0 1 6 4.9V20"/></svg></span> Workers</button>
+    <button class="tab" data-view="records" role="tab" aria-selected="false" aria-controls="records"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 5h10M9 12h10M9 19h10M4 5h.01M4 12h.01M4 19h.01"/></svg></span> Records <span id="recordTabCount" class="tab-count">0</span></button>
   </nav>
 
   <main>
@@ -166,6 +166,6 @@
 
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>
