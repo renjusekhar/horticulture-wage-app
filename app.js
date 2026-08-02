@@ -30,9 +30,16 @@ function readStored(key, fallback) {
 
 const storedWorkers = readStored("hw_workers", defaultWorkers);
 const storedEntries = readStored("hw_entries", []);
+function normalizeAdvance(value) {
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount > 0 ? amount : 0;
+}
+
 const state = {
   workers: Array.isArray(storedWorkers) ? storedWorkers : defaultWorkers,
-  entries: Array.isArray(storedEntries) ? storedEntries : []
+  entries: Array.isArray(storedEntries)
+    ? storedEntries.map(entry => ({ ...entry, advance: normalizeAdvance(entry.advance) }))
+    : []
 };
 
 const $ = id => document.getElementById(id);
@@ -252,9 +259,10 @@ function renderEntryPreview() {
   const workType = $("workType").value || "Choose work";
   const supervisor = $("supervisor").value;
   const payment = $("paymentStatus").value;
+  const advance = normalizeAdvance($("advance").value);
 
   $("previewWorker").textContent = worker;
-  $("previewDetails").textContent = `${workType} · ${supervisor} · ${payment}`;
+  $("previewDetails").textContent = `${workType} · ${supervisor} · ${payment}${advance ? ` · Advance ${money(advance)}` : ""}`;
   $("previewWage").textContent = money($("wage").value);
   preview.dataset.status = payment.toLowerCase();
   preview.animate?.(
@@ -275,7 +283,7 @@ function renderRecentEntries() {
       <span class="recent-avatar" aria-hidden="true">${escapeHtml(entry.worker.trim().charAt(0).toUpperCase() || "W")}</span>
       <div class="recent-copy">
         <strong>${escapeHtml(entry.worker)}</strong>
-        <small>${escapeHtml(entry.workType)} · ${formatDate(entry.date)}</small>
+        <small>${escapeHtml(entry.workType)} · ${formatDate(entry.date)}${normalizeAdvance(entry.advance) ? ` · Advance ${money(entry.advance)}` : ""}</small>
       </div>
       <div class="recent-amount">
         <strong>${money(entry.wage)}</strong>
@@ -306,7 +314,7 @@ function renderRecords(filter = "") {
   const rows = [...state.entries]
     .sort((a, b) => b.date.localeCompare(a.date) || Number(b.createdAt || 0) - Number(a.createdAt || 0))
     .filter(entry => (
-      `${entry.worker} ${entry.workType} ${entry.supervisor} ${entry.status} ${entry.remarks || ""}`
+      `${entry.worker} ${entry.workType} ${entry.supervisor} ${entry.status} ${normalizeAdvance(entry.advance)} ${entry.remarks || ""}`
         .toLowerCase()
         .includes(query)
     ));
@@ -319,6 +327,7 @@ function renderRecords(filter = "") {
       <td data-label="Supervisor">${escapeHtml(entry.supervisor)}</td>
       <td data-label="Status"><span class="badge ${entry.status === "Paid" ? "paid" : "pending"}">${escapeHtml(entry.status)}</span></td>
       <td data-label="Wage"><strong>${money(entry.wage)}</strong></td>
+      <td data-label="Advance"><strong class="advance-amount">${money(entry.advance)}</strong></td>
       <td data-label="Actions">
         <div class="row-actions">
           <button class="secondary tiny" type="button" data-edit="${escapeHtml(entry.id)}">Edit</button>
@@ -327,7 +336,7 @@ function renderRecords(filter = "") {
       </td>
     </tr>
   `).join("") || `
-    <tr><td colspan="7" class="empty-cell"><strong>${query ? "No matching records" : "No work records yet"}</strong>${query ? "Try a different worker, work type, or status." : "Your saved daily entries will appear here."}</td></tr>
+    <tr><td colspan="8" class="empty-cell"><strong>${query ? "No matching records" : "No work records yet"}</strong>${query ? "Try a different worker, work type, or status." : "Your saved daily entries will appear here."}</td></tr>
   `;
 
   $("recordCount").textContent = query
@@ -349,8 +358,8 @@ function renderSummary() {
 
   $("summaryTitle").textContent = isDaily ? "Daily Summary" : "Weekly Summary";
   $("summaryDescription").textContent = isDaily
-    ? "Review wages for one selected day."
-    : "Browse totals one week at a time.";
+    ? "Review wages and advances for one selected day."
+    : "Browse wage and advance totals one week at a time.";
   $("periodLabel").textContent = isDaily
     ? formatDate(selected)
     : `${formatDate(start)} — ${formatDate(end)}`;
@@ -366,11 +375,13 @@ function renderSummary() {
   });
 
   const total = entries.reduce((sum, entry) => sum + Number(entry.wage), 0);
+  const advance = entries.reduce((sum, entry) => sum + normalizeAdvance(entry.advance), 0);
   const paid = entries
     .filter(entry => entry.status === "Paid")
     .reduce((sum, entry) => sum + Number(entry.wage), 0);
 
   $("sumTotal").textContent = money(total);
+  $("sumAdvance").textContent = money(advance);
   $("sumPaid").textContent = money(paid);
   $("sumPending").textContent = money(total - paid);
   $("sumAjith").textContent = money(entries
@@ -383,10 +394,11 @@ function renderSummary() {
 
   const grouped = {};
   entries.forEach(entry => {
-    grouped[entry.worker] ??= { days: new Set(), workTypes: new Set(), total: 0, pending: 0 };
+    grouped[entry.worker] ??= { days: new Set(), workTypes: new Set(), total: 0, advance: 0, pending: 0 };
     grouped[entry.worker].days.add(entry.date);
     grouped[entry.worker].workTypes.add(entry.workType);
     grouped[entry.worker].total += Number(entry.wage);
+    grouped[entry.worker].advance += normalizeAdvance(entry.advance);
     if (entry.status !== "Paid") grouped[entry.worker].pending += Number(entry.wage);
   });
 
@@ -398,11 +410,12 @@ function renderSummary() {
         <td data-label="Worker"><strong>${escapeHtml(name)}</strong></td>
         <td data-label="${detailLabel}">${isDaily ? escapeHtml(detail) : detail}</td>
         <td data-label="Total">${money(group.total)}</td>
+        <td data-label="Advance"><strong class="advance-amount">${money(group.advance)}</strong></td>
         <td data-label="Pending">${money(group.pending)}</td>
       </tr>
     `;
   }).join("") || `
-    <tr><td colspan="4" class="empty-cell"><strong>No entries ${isDaily ? "for this day" : "this week"}</strong>${isDaily ? "Choose another date" : "Choose another week"} or add a daily entry.</td></tr>
+    <tr><td colspan="5" class="empty-cell"><strong>No entries ${isDaily ? "for this day" : "this week"}</strong>${isDaily ? "Choose another date" : "Choose another week"} or add a daily entry.</td></tr>
   `;
 
   renderMiniStats();
@@ -424,9 +437,11 @@ function renderMiniStats() {
   const pendingTotal = weekEntries
     .filter(entry => entry.status !== "Paid")
     .reduce((sum, entry) => sum + Number(entry.wage), 0);
+  const advanceTotal = weekEntries.reduce((sum, entry) => sum + normalizeAdvance(entry.advance), 0);
 
   $("todayTotal").textContent = money(todayTotal);
   $("weekTotalMini").textContent = money(weekTotal);
+  $("advanceMini").textContent = money(advanceTotal);
   $("pendingMini").textContent = money(pendingTotal);
 }
 
@@ -471,6 +486,7 @@ $("worker").addEventListener("change", () => {
 });
 $("workType").addEventListener("change", renderEntryPreview);
 $("wage").addEventListener("input", renderEntryPreview);
+$("advance").addEventListener("input", renderEntryPreview);
 $("supervisor").addEventListener("change", renderEntryPreview);
 $("paymentStatus").addEventListener("change", renderEntryPreview);
 $("date").addEventListener("change", renderEntryPreview);
@@ -512,6 +528,7 @@ $("entryForm").addEventListener("submit", event => {
     worker: $("worker").value,
     workType: $("workType").value,
     wage: Number($("wage").value),
+    advance: normalizeAdvance($("advance").value),
     supervisor: $("supervisor").value,
     status: $("paymentStatus").value,
     remarks: $("remarks").value.trim()
@@ -520,10 +537,11 @@ $("entryForm").addEventListener("submit", event => {
   state.entries.push(entry);
   persist();
   $("remarks").value = "";
+  $("advance").value = "0";
   $("paymentStatus").value = "Pending";
   refresh();
   setMessage("entryMessage", `Saved ${entry.worker}'s ${entry.workType.toLowerCase()} entry.`);
-  showToast("Entry saved", `${entry.worker} · ${money(entry.wage)} · ${formatDate(entry.date)}`);
+  showToast("Entry saved", `${entry.worker} · Wage ${money(entry.wage)}${entry.advance ? ` · Advance ${money(entry.advance)}` : ""} · ${formatDate(entry.date)}`);
   setTimeout(() => setMessage("entryMessage"), 3200);
 });
 
@@ -589,7 +607,7 @@ document.addEventListener("click", async event => {
     if (!entry) return;
     const approved = await confirmAction({
       title: "Delete this work entry?",
-      message: `${entry.worker} · ${entry.workType} · ${money(entry.wage)} on ${formatDate(entry.date)}. This cannot be undone.`,
+      message: `${entry.worker} · ${entry.workType} · Wage ${money(entry.wage)}${normalizeAdvance(entry.advance) ? ` · Advance ${money(entry.advance)}` : ""} on ${formatDate(entry.date)}. This cannot be undone.`,
       confirmLabel: "Delete entry"
     });
     if (!approved) return;
@@ -609,6 +627,7 @@ document.addEventListener("click", async event => {
     $("editWorker").value = entry.worker;
     $("editWorkType").value = entry.workType;
     $("editWage").value = entry.wage;
+    $("editAdvance").value = normalizeAdvance(entry.advance);
     $("editSupervisor").value = entry.supervisor;
     $("editStatus").value = entry.status;
     $("editRemarks").value = entry.remarks || "";
@@ -633,6 +652,7 @@ $("editForm").addEventListener("submit", event => {
     worker: $("editWorker").value,
     workType: $("editWorkType").value,
     wage: Number($("editWage").value),
+    advance: normalizeAdvance($("editAdvance").value),
     supervisor: $("editSupervisor").value,
     status: $("editStatus").value,
     remarks: $("editRemarks").value.trim()
@@ -645,12 +665,13 @@ $("editForm").addEventListener("submit", event => {
 });
 
 $("exportCsv").addEventListener("click", () => {
-  const headers = ["Date", "Worker", "Work Type", "Wage", "Supervisor", "Status", "Remarks"];
+  const headers = ["Date", "Worker", "Work Type", "Wage", "Advance", "Supervisor", "Status", "Remarks"];
   const rows = state.entries.map(entry => [
     entry.date,
     entry.worker,
     entry.workType,
     entry.wage,
+    normalizeAdvance(entry.advance),
     entry.supervisor,
     entry.status,
     entry.remarks || ""
@@ -686,6 +707,7 @@ $("restoreJson").addEventListener("change", async event => {
       ...entry,
       id: entry.id || crypto.randomUUID(),
       wage: Number(entry.wage),
+      advance: normalizeAdvance(entry.advance),
       remarks: entry.remarks || ""
     }));
     const workersAreValid = restoredWorkers.every(worker => (
@@ -697,7 +719,8 @@ $("restoreJson").addEventListener("change", async event => {
       typeof entry.workType === "string" &&
       typeof entry.supervisor === "string" &&
       ["Paid", "Pending"].includes(entry.status) &&
-      Number.isFinite(entry.wage)
+      Number.isFinite(entry.wage) &&
+      Number.isFinite(entry.advance)
     ));
     if (!workersAreValid || !entriesAreValid) throw new Error("Invalid backup contents");
 
@@ -765,7 +788,7 @@ window.addEventListener("offline", () => showToast("You are offline", "Saved dat
 window.addEventListener("online", () => showToast("Back online", "The app is connected again."));
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js?v=10", { updateViaCache: "none" })
+  navigator.serviceWorker.register("service-worker.js?v=11", { updateViaCache: "none" })
     .then(registration => registration.update())
     .catch(() => {
       showToast("Offline mode unavailable", "The app will still work while this page stays open.", "error");

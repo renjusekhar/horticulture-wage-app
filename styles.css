@@ -273,7 +273,7 @@ button:disabled { opacity: .48; cursor: not-allowed; }
 .recent-empty { grid-column: 1 / -1; padding: 22px; border: 1px dashed #c6d8cc; border-radius: 14px; color: var(--muted); background: var(--green-faint); text-align: center; }
 .recent-empty strong { display: block; margin-bottom: 4px; color: #385345; }
 
-.quick-stats, .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+.quick-stats, .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
 .stat-card, .summary-grid article {
   text-align: left;
   background: rgba(255, 255, 255, .82);
@@ -285,6 +285,8 @@ button:disabled { opacity: .48; cursor: not-allowed; }
 .stat-card { color: inherit; }
 .stat-card:hover { background: #fff; border-color: #b9d0bf; box-shadow: 0 12px 30px rgba(29, 74, 46, .09); }
 .stat-card.stat-pending { background: var(--amber-soft); border-color: #f0dfbd; }
+.stat-card.stat-advance, .summary-grid .advance-total { background: #eef6ff; border-color: #ccdeef; }
+.stat-card.stat-advance strong, .summary-grid .advance-total strong, .advance-amount { color: #285f88; }
 .stat-card span, .summary-grid span { display: block; color: var(--muted); font-size: .82rem; font-weight: 650; }
 .stat-card strong, .summary-grid strong { display: block; margin-top: 7px; font-size: 1.45rem; }
 .stat-card small { display: block; margin-top: 12px; color: var(--green); font-weight: 750; }

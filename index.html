@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=9" />
+  <link rel="stylesheet" href="styles.css?v=11" />
 </head>
 <body>
   <header class="app-header">
@@ -49,10 +49,11 @@
           <label>Worker<select id="worker" required></select></label>
           <label>Work type<select id="workType" required></select></label>
           <label>Wage (₹)<input id="wage" type="number" min="0" step="1" required /></label>
+          <label>Advance paid (₹)<input id="advance" type="number" min="0" step="1" value="0" inputmode="numeric" /></label>
           <label>Supervisor<select id="supervisor" required><option>Ajith</option><option>Dad</option></select></label>
           <label>Payment status<select id="paymentStatus"><option>Pending</option><option>Paid</option></select></label>
           <label class="full">Remarks<input id="remarks" type="text" maxlength="120" placeholder="Optional" /></label>
-          <p class="form-note full"><span aria-hidden="true">i</span> Add each task separately. Multiple entries are combined in the summaries.</p>
+          <p class="form-note full"><span aria-hidden="true">i</span> Add each task separately. Advances are tracked separately from wages and combined in the summaries.</p>
           <button id="saveEntry" type="submit" class="primary full"><span aria-hidden="true">＋</span> Save Entry</button>
         </form>
         <p id="entryMessage" class="message" role="status" aria-live="polite"></p>
@@ -61,6 +62,7 @@
       <div class="quick-stats">
         <button type="button" class="stat-card" data-switch-view="summary" data-summary-mode="daily"><span>Today</span><strong id="todayTotal">₹0</strong><small>View daily summary <span aria-hidden="true">→</span></small></button>
         <button type="button" class="stat-card" data-switch-view="summary" data-summary-mode="weekly"><span>This week</span><strong id="weekTotalMini">₹0</strong><small>View weekly summary <span aria-hidden="true">→</span></small></button>
+        <button type="button" class="stat-card stat-advance" data-switch-view="summary" data-summary-mode="weekly"><span>Advances this week</span><strong id="advanceMini">₹0</strong><small>Review advance payments <span aria-hidden="true">→</span></small></button>
         <button type="button" class="stat-card stat-pending" data-switch-view="summary" data-summary-mode="weekly"><span>Pending this week</span><strong id="pendingMini">₹0</strong><small>Review weekly wages <span aria-hidden="true">→</span></small></button>
       </div>
     </section>
@@ -68,7 +70,7 @@
     <section id="summary" class="view" role="tabpanel" hidden>
       <div class="card">
         <div class="section-head">
-          <div><p class="section-kicker">Overview</p><h2 id="summaryTitle">Daily Summary</h2><p id="summaryDescription">Review wages for one selected day.</p></div>
+          <div><p class="section-kicker">Overview</p><h2 id="summaryTitle">Daily Summary</h2><p id="summaryDescription">Review wages and advances for one selected day.</p></div>
           <div class="summary-mode-toggle" role="tablist" aria-label="Summary period">
             <button class="summary-mode active" type="button" role="tab" aria-selected="true" data-summary-mode-button="daily">Daily</button>
             <button class="summary-mode" type="button" role="tab" aria-selected="false" data-summary-mode-button="weekly">Weekly</button>
@@ -86,14 +88,15 @@
         </div>
         <div class="summary-grid">
           <article><span>Total wages</span><strong id="sumTotal">₹0</strong></article>
+          <article class="advance-total"><span>Advances paid</span><strong id="sumAdvance">₹0</strong></article>
           <article><span>Paid</span><strong id="sumPaid">₹0</strong></article>
-          <article><span>Pending</span><strong id="sumPending">₹0</strong></article>
+          <article><span>Pending wages</span><strong id="sumPending">₹0</strong></article>
           <article><span>Ajith</span><strong id="sumAjith">₹0</strong></article>
           <article><span>Dad</span><strong id="sumDad">₹0</strong></article>
           <article><span>Work entries</span><strong id="sumEntries">0</strong></article>
         </div>
         <h3>Worker-wise totals</h3>
-        <div class="table-wrap"><table><thead><tr><th>Worker</th><th id="summaryDetailHeading">Work</th><th>Total</th><th>Pending</th></tr></thead><tbody id="workerSummaryBody"></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>Worker</th><th id="summaryDetailHeading">Work</th><th>Total wage</th><th>Advance</th><th>Pending wage</th></tr></thead><tbody id="workerSummaryBody"></tbody></table></div>
       </div>
     </section>
 
@@ -121,7 +124,7 @@
           <div class="search-wrap"><span aria-hidden="true">⌕</span><label class="sr-only" for="recordSearch">Search records</label><input id="recordSearch" type="search" placeholder="Search worker, work, or status" /></div>
         </div>
         <div class="table-toolbar"><span id="recordCount">0 records</span><button id="clearSearch" class="text-button hidden" type="button">Clear search</button></div>
-        <div class="table-wrap"><table><thead><tr><th>Date</th><th>Worker</th><th>Work</th><th>Supervisor</th><th>Status</th><th>Wage</th><th></th></tr></thead><tbody id="recordsBody"></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>Date</th><th>Worker</th><th>Work</th><th>Supervisor</th><th>Status</th><th>Wage</th><th>Advance</th><th></th></tr></thead><tbody id="recordsBody"></tbody></table></div>
         <div class="actions">
           <button id="exportCsv" class="secondary" type="button">Export CSV</button>
           <button id="backupJson" class="secondary" type="button">Backup Data</button>
@@ -140,6 +143,7 @@
       <label>Worker<select id="editWorker" required></select></label>
       <label>Work type<select id="editWorkType" required></select></label>
       <label>Wage<input id="editWage" type="number" min="0" required /></label>
+      <label>Advance paid<input id="editAdvance" type="number" min="0" step="1" value="0" inputmode="numeric" /></label>
       <label>Supervisor<select id="editSupervisor"><option>Ajith</option><option>Dad</option></select></label>
       <label>Status<select id="editStatus"><option>Pending</option><option>Paid</option></select></label>
       <label>Remarks<input id="editRemarks" type="text" /></label>
@@ -161,6 +165,6 @@
 
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>
