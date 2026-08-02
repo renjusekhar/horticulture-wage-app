@@ -1,16 +1,16 @@
-const CACHE = "horticulture-wage-v14";
+const CACHE = "horticulture-wage-v15";
 const CACHE_PREFIX = "horticulture-wage-";
 const FILES = [
   "./",
   "index.html",
-  "styles.css?v=14",
-  "app.js?v=14",
-  "manifest.webmanifest",
+  "styles.css?v=15",
+  "app.js?v=15",
+  "manifest.webmanifest?v=2",
   "icon.svg",
-  "icon-32.png",
-  "icon-180.png",
-  "icon-192.png",
-  "icon-512.png"
+  "brand-logo-32-v2.png",
+  "brand-logo-180-v2.png",
+  "brand-logo-192-v2.png",
+  "brand-logo-512-v2.png"
 ];
 
 self.addEventListener("install", event => {
