@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=11" />
+  <link rel="stylesheet" href="styles.css?v=12" />
 </head>
 <body>
   <header class="app-header">
@@ -63,14 +63,14 @@
         <button type="button" class="stat-card" data-switch-view="summary" data-summary-mode="daily"><span>Today</span><strong id="todayTotal">₹0</strong><small>View daily summary <span aria-hidden="true">→</span></small></button>
         <button type="button" class="stat-card" data-switch-view="summary" data-summary-mode="weekly"><span>This week</span><strong id="weekTotalMini">₹0</strong><small>View weekly summary <span aria-hidden="true">→</span></small></button>
         <button type="button" class="stat-card stat-advance" data-switch-view="summary" data-summary-mode="weekly"><span>Advances this week</span><strong id="advanceMini">₹0</strong><small>Review advance payments <span aria-hidden="true">→</span></small></button>
-        <button type="button" class="stat-card stat-pending" data-switch-view="summary" data-summary-mode="weekly"><span>Pending this week</span><strong id="pendingMini">₹0</strong><small>Review weekly wages <span aria-hidden="true">→</span></small></button>
+        <button type="button" class="stat-card stat-net" data-switch-view="summary" data-summary-mode="weekly"><span>Net payable this week</span><strong id="netPayableMini">₹0</strong><small>After deducting advances <span aria-hidden="true">→</span></small></button>
       </div>
     </section>
 
     <section id="summary" class="view" role="tabpanel" hidden>
       <div class="card">
         <div class="section-head">
-          <div><p class="section-kicker">Overview</p><h2 id="summaryTitle">Daily Summary</h2><p id="summaryDescription">Review wages and advances for one selected day.</p></div>
+          <div><p class="section-kicker">Overview</p><h2 id="summaryTitle">Daily Summary</h2><p id="summaryDescription">Review gross wages, advances, and net payable for one selected day.</p></div>
           <div class="summary-mode-toggle" role="tablist" aria-label="Summary period">
             <button class="summary-mode active" type="button" role="tab" aria-selected="true" data-summary-mode-button="daily">Daily</button>
             <button class="summary-mode" type="button" role="tab" aria-selected="false" data-summary-mode-button="weekly">Weekly</button>
@@ -89,6 +89,7 @@
         <div class="summary-grid">
           <article><span>Total wages</span><strong id="sumTotal">₹0</strong></article>
           <article class="advance-total"><span>Advances paid</span><strong id="sumAdvance">₹0</strong></article>
+          <article class="net-total"><span>Net payable</span><strong id="sumNetPayable">₹0</strong></article>
           <article><span>Paid</span><strong id="sumPaid">₹0</strong></article>
           <article><span>Pending wages</span><strong id="sumPending">₹0</strong></article>
           <article><span>Ajith</span><strong id="sumAjith">₹0</strong></article>
@@ -96,7 +97,7 @@
           <article><span>Work entries</span><strong id="sumEntries">0</strong></article>
         </div>
         <h3>Worker-wise totals</h3>
-        <div class="table-wrap"><table><thead><tr><th>Worker</th><th id="summaryDetailHeading">Work</th><th>Total wage</th><th>Advance</th><th>Pending wage</th></tr></thead><tbody id="workerSummaryBody"></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>Worker</th><th id="summaryDetailHeading">Work</th><th>Gross wage</th><th>Advance</th><th>Net payable</th><th>Pending wage</th></tr></thead><tbody id="workerSummaryBody"></tbody></table></div>
       </div>
     </section>
 
@@ -165,6 +166,6 @@
 
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-  <script src="app.js?v=11"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>

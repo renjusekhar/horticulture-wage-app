@@ -35,6 +35,10 @@ function normalizeAdvance(value) {
   return Number.isFinite(amount) && amount > 0 ? amount : 0;
 }
 
+function calculateNetPayable(wage, advance) {
+  return Math.max(0, Number(wage || 0) - normalizeAdvance(advance));
+}
+
 const state = {
   workers: Array.isArray(storedWorkers) ? storedWorkers : defaultWorkers,
   entries: Array.isArray(storedEntries)
@@ -358,8 +362,8 @@ function renderSummary() {
 
   $("summaryTitle").textContent = isDaily ? "Daily Summary" : "Weekly Summary";
   $("summaryDescription").textContent = isDaily
-    ? "Review wages and advances for one selected day."
-    : "Browse wage and advance totals one week at a time.";
+    ? "Review gross wages, advances, and net payable for one selected day."
+    : "Review each worker's final wage after deducting advances.";
   $("periodLabel").textContent = isDaily
     ? formatDate(selected)
     : `${formatDate(start)} — ${formatDate(end)}`;
@@ -382,6 +386,7 @@ function renderSummary() {
 
   $("sumTotal").textContent = money(total);
   $("sumAdvance").textContent = money(advance);
+  $("sumNetPayable").textContent = money(calculateNetPayable(total, advance));
   $("sumPaid").textContent = money(paid);
   $("sumPending").textContent = money(total - paid);
   $("sumAjith").textContent = money(entries
@@ -409,13 +414,14 @@ function renderSummary() {
       <tr>
         <td data-label="Worker"><strong>${escapeHtml(name)}</strong></td>
         <td data-label="${detailLabel}">${isDaily ? escapeHtml(detail) : detail}</td>
-        <td data-label="Total">${money(group.total)}</td>
+        <td data-label="Gross wage">${money(group.total)}</td>
         <td data-label="Advance"><strong class="advance-amount">${money(group.advance)}</strong></td>
-        <td data-label="Pending">${money(group.pending)}</td>
+        <td data-label="Net payable"><strong class="payable-amount">${money(calculateNetPayable(group.total, group.advance))}</strong></td>
+        <td data-label="Pending wage">${money(group.pending)}</td>
       </tr>
     `;
   }).join("") || `
-    <tr><td colspan="5" class="empty-cell"><strong>No entries ${isDaily ? "for this day" : "this week"}</strong>${isDaily ? "Choose another date" : "Choose another week"} or add a daily entry.</td></tr>
+    <tr><td colspan="6" class="empty-cell"><strong>No entries ${isDaily ? "for this day" : "this week"}</strong>${isDaily ? "Choose another date" : "Choose another week"} or add a daily entry.</td></tr>
   `;
 
   renderMiniStats();
@@ -434,15 +440,12 @@ function renderMiniStats() {
   const weekEntries = state.entries.filter(entry => entry.date >= start && entry.date <= end);
   const todayTotal = todayEntries.reduce((sum, entry) => sum + Number(entry.wage), 0);
   const weekTotal = weekEntries.reduce((sum, entry) => sum + Number(entry.wage), 0);
-  const pendingTotal = weekEntries
-    .filter(entry => entry.status !== "Paid")
-    .reduce((sum, entry) => sum + Number(entry.wage), 0);
   const advanceTotal = weekEntries.reduce((sum, entry) => sum + normalizeAdvance(entry.advance), 0);
 
   $("todayTotal").textContent = money(todayTotal);
   $("weekTotalMini").textContent = money(weekTotal);
   $("advanceMini").textContent = money(advanceTotal);
-  $("pendingMini").textContent = money(pendingTotal);
+  $("netPayableMini").textContent = money(calculateNetPayable(weekTotal, advanceTotal));
 }
 
 function refresh() {
@@ -788,7 +791,7 @@ window.addEventListener("offline", () => showToast("You are offline", "Saved dat
 window.addEventListener("online", () => showToast("Back online", "The app is connected again."));
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js?v=11", { updateViaCache: "none" })
+  navigator.serviceWorker.register("service-worker.js?v=12", { updateViaCache: "none" })
     .then(registration => registration.update())
     .catch(() => {
       showToast("Offline mode unavailable", "The app will still work while this page stays open.", "error");

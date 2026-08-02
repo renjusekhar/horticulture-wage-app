@@ -287,6 +287,8 @@ button:disabled { opacity: .48; cursor: not-allowed; }
 .stat-card.stat-pending { background: var(--amber-soft); border-color: #f0dfbd; }
 .stat-card.stat-advance, .summary-grid .advance-total { background: #eef6ff; border-color: #ccdeef; }
 .stat-card.stat-advance strong, .summary-grid .advance-total strong, .advance-amount { color: #285f88; }
+.stat-card.stat-net, .summary-grid .net-total { background: #eef9f1; border-color: #c5e1cd; }
+.stat-card.stat-net strong, .summary-grid .net-total strong, .payable-amount { color: var(--green-dark); }
 .stat-card span, .summary-grid span { display: block; color: var(--muted); font-size: .82rem; font-weight: 650; }
 .stat-card strong, .summary-grid strong { display: block; margin-top: 7px; font-size: 1.45rem; }
 .stat-card small { display: block; margin-top: 12px; color: var(--green); font-weight: 750; }
