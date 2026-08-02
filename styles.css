@@ -193,6 +193,8 @@ button:disabled { opacity: .48; cursor: not-allowed; }
 
 .message { min-height: 20px; margin: 10px 0 6px; color: var(--green); font-size: .88rem; font-weight: 700; }
 .message.error { color: var(--danger); }
+.form-note { display: flex; align-items: center; gap: 8px; margin: -1px 0 0; color: var(--muted); font-size: .8rem; font-weight: 650; }
+.form-note span { display: inline-grid; place-items: center; width: 19px; height: 19px; flex: 0 0 auto; border-radius: 50%; background: var(--green-soft); color: var(--green-dark); font-size: .72rem; font-weight: 850; }
 
 .quick-stats, .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
 .stat-card, .summary-grid article {

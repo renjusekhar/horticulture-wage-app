@@ -1,10 +1,10 @@
-const CACHE = "horticulture-wage-v6";
+const CACHE = "horticulture-wage-v7";
 const CACHE_PREFIX = "horticulture-wage-";
 const FILES = [
   "./",
   "index.html",
-  "styles.css?v=6",
-  "app.js?v=6",
+  "styles.css?v=7",
+  "app.js?v=7",
   "manifest.webmanifest",
   "icon.svg",
   "icon-192.png",

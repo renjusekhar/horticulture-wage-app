@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=6" />
+  <link rel="stylesheet" href="styles.css?v=7" />
 </head>
 <body>
   <header class="app-header">
@@ -52,6 +52,7 @@
           <label>Supervisor<select id="supervisor" required><option>Ajith</option><option>Dad</option></select></label>
           <label>Payment status<select id="paymentStatus"><option>Pending</option><option>Paid</option></select></label>
           <label class="full">Remarks<input id="remarks" type="text" maxlength="120" placeholder="Optional" /></label>
+          <p class="form-note full"><span aria-hidden="true">i</span> One entry per worker per day. Use Records to update a saved entry.</p>
           <button id="saveEntry" type="submit" class="primary full"><span aria-hidden="true">＋</span> Save Entry</button>
         </form>
         <p id="entryMessage" class="message" role="status" aria-live="polite"></p>
@@ -136,6 +137,7 @@
       <label>Supervisor<select id="editSupervisor"><option>Ajith</option><option>Dad</option></select></label>
       <label>Status<select id="editStatus"><option>Pending</option><option>Paid</option></select></label>
       <label>Remarks<input id="editRemarks" type="text" /></label>
+      <p id="editMessage" class="message" role="status" aria-live="polite"></p>
       <div class="dialog-actions"><button id="cancelEdit" type="button" class="secondary">Cancel</button><button id="saveEdit" type="submit" class="primary">Save Changes</button></div>
     </form>
   </dialog>
@@ -154,6 +156,6 @@
 
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

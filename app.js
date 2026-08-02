@@ -201,6 +201,32 @@ function syncWage() {
   if (worker) $("wage").value = worker.wage;
 }
 
+function findDailyEntry(worker, date, excludeId = "") {
+  return state.entries.find(entry => (
+    entry.id !== excludeId && entry.worker === worker && entry.date === date
+  ));
+}
+
+function dailyEntryMessage(worker, date) {
+  return `${worker} already has a work entry for ${formatDate(date)}. Open Records to update it.`;
+}
+
+function updateEntryAvailability(showMessage = true) {
+  const hasWorkers = state.workers.length > 0;
+  const worker = $("worker").value;
+  const date = $("date").value;
+  const existing = hasWorkers && worker && date ? findDailyEntry(worker, date) : null;
+  $("saveEntry").disabled = !hasWorkers || Boolean(existing);
+
+  if (!showMessage) return existing;
+  if (existing) {
+    setMessage("entryMessage", dailyEntryMessage(worker, date), "error");
+  } else if ($("entryMessage").classList.contains("error")) {
+    setMessage("entryMessage");
+  }
+  return existing;
+}
+
 function renderWorkers() {
   $("workerCount").textContent = `${state.workers.length} ${state.workers.length === 1 ? "worker" : "workers"}`;
   $("workersBody").innerHTML = state.workers.map(worker => `
@@ -316,6 +342,7 @@ function refresh() {
   renderWorkers();
   renderRecords($("recordSearch").value);
   renderSummary();
+  updateEntryAvailability();
 }
 
 function shiftSummaryWeek(days) {
@@ -342,7 +369,11 @@ document.querySelectorAll(".tab").forEach(tab => {
   });
 });
 
-$("worker").addEventListener("change", syncWage);
+$("worker").addEventListener("change", () => {
+  syncWage();
+  updateEntryAvailability();
+});
+$("date").addEventListener("change", () => updateEntryAvailability());
 $("summaryDate").addEventListener("change", renderSummary);
 $("prevWeek").addEventListener("click", () => shiftSummaryWeek(-7));
 $("nextWeek").addEventListener("click", () => shiftSummaryWeek(7));
@@ -382,6 +413,12 @@ $("entryForm").addEventListener("submit", event => {
     remarks: $("remarks").value.trim()
   };
 
+  if (findDailyEntry(entry.worker, entry.date)) {
+    updateEntryAvailability();
+    showToast("Entry already recorded", dailyEntryMessage(entry.worker, entry.date), "error");
+    return;
+  }
+
   state.entries.push(entry);
   persist();
   $("remarks").value = "";
@@ -389,7 +426,7 @@ $("entryForm").addEventListener("submit", event => {
   refresh();
   setMessage("entryMessage", `Saved ${entry.worker}'s ${entry.workType.toLowerCase()} entry.`);
   showToast("Entry saved", `${entry.worker} · ${money(entry.wage)} · ${formatDate(entry.date)}`);
-  setTimeout(() => setMessage("entryMessage"), 3200);
+  setTimeout(() => updateEntryAvailability(), 3200);
 });
 
 $("workerForm").addEventListener("submit", event => {
@@ -476,6 +513,7 @@ document.addEventListener("click", async event => {
     $("editSupervisor").value = entry.supervisor;
     $("editStatus").value = entry.status;
     $("editRemarks").value = entry.remarks || "";
+    setMessage("editMessage");
     $("editDialog").showModal();
   }
 });
@@ -488,11 +526,14 @@ $("confirmDialog").addEventListener("click", event => {
   if (event.target === $("confirmDialog")) $("confirmDialog").close("cancel");
 });
 
+$("editDate").addEventListener("change", () => setMessage("editMessage"));
+$("editWorker").addEventListener("change", () => setMessage("editMessage"));
+
 $("editForm").addEventListener("submit", event => {
   event.preventDefault();
   const entry = state.entries.find(item => item.id === $("editId").value);
   if (!entry) return;
-  Object.assign(entry, {
+  const changes = {
     date: $("editDate").value,
     worker: $("editWorker").value,
     workType: $("editWorkType").value,
@@ -500,7 +541,14 @@ $("editForm").addEventListener("submit", event => {
     supervisor: $("editSupervisor").value,
     status: $("editStatus").value,
     remarks: $("editRemarks").value.trim()
-  });
+  };
+  if (findDailyEntry(changes.worker, changes.date, entry.id)) {
+    const message = dailyEntryMessage(changes.worker, changes.date);
+    setMessage("editMessage", message, "error");
+    showToast("Entry already recorded", message, "error");
+    return;
+  }
+  Object.assign(entry, changes);
   persist();
   $("editDialog").close();
   refresh();
@@ -562,7 +610,15 @@ $("restoreJson").addEventListener("change", async event => {
       ["Paid", "Pending"].includes(entry.status) &&
       Number.isFinite(entry.wage)
     ));
+    const restoredEntryKeys = new Set();
+    const entriesAreUnique = restoredEntries.every(entry => {
+      const key = `${entry.date}::${entry.worker.toLowerCase()}`;
+      if (restoredEntryKeys.has(key)) return false;
+      restoredEntryKeys.add(key);
+      return true;
+    });
     if (!workersAreValid || !entriesAreValid) throw new Error("Invalid backup contents");
+    if (!entriesAreUnique) throw new Error("Duplicate daily entries");
 
     const approved = await confirmAction({
       title: "Restore this backup?",
@@ -579,8 +635,11 @@ $("restoreJson").addEventListener("change", async event => {
     persist();
     refresh();
     showToast("Backup restored", "Your workers and work entries are ready.");
-  } catch {
-    showToast("Could not restore backup", "Choose a valid Horticulture Wage Tracker backup file.", "error");
+  } catch (error) {
+    const detail = error.message === "Duplicate daily entries"
+      ? "The backup contains more than one entry for the same worker and date."
+      : "Choose a valid Horticulture Wage Tracker backup file.";
+    showToast("Could not restore backup", detail, "error");
   } finally {
     event.target.value = "";
   }
@@ -628,7 +687,7 @@ window.addEventListener("offline", () => showToast("You are offline", "Saved dat
 window.addEventListener("online", () => showToast("Back online", "The app is connected again."));
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js?v=6", { updateViaCache: "none" })
+  navigator.serviceWorker.register("service-worker.js?v=7", { updateViaCache: "none" })
     .then(registration => registration.update())
     .catch(() => {
       showToast("Offline mode unavailable", "The app will still work while this page stays open.", "error");
